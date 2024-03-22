@@ -11,7 +11,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "description_package",
-            default_value="dh_ag95_description",
+            default_value="kwr75_force_sensor_ros2",
             description="Description package with robot URDF/XACRO files. Usually the argument \
         is not set, it enables use of a custom description.",
         )
@@ -19,7 +19,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "description_file",
-            default_value="dh_ag95.urdf.xacro",
+            default_value="kwr75.urdf.xacro",
             description="URDF/XACRO description file with the robot.",
         )
     )

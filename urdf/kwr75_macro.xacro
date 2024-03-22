@@ -4,14 +4,39 @@
     params="
     prefix 
     parent
-    tcp_offset
     *origin"
   >
+    <link name="${prefix}kwr75_base_link">
+      <inertial>
+        <origin xyz="0.00016490924101778332 0.00015134704036161043 0.01805492934845781" rpy="0 0 0"/>
+        <mass value="0.9095687374891032"/>
+        <inertia ixx="0.000433" iyy="0.000433" izz="0.00067" ixy="-3e-06" iyz="1e-06" ixz="1e-06"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="${-pi/2} 0 0"/>
+        <geometry>
+          <mesh filename="package://kwr75_force_sensor_ros2/meshes/kwr75.dae" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://kwr75_force_sensor_ros2/meshes/kwr75_collision.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </collision>
+    </link>
+
     <link name="${prefix}fts_link"/>
 
     <joint name="${prefix}fts_joint" type="fixed">
-      <parent link="${parent}" />
+      <parent link="${prefix}kwr75_base_link" />
       <child link="${prefix}fts_link" />
+      <origin xyz="0 0 0.0375" rpy="0 0 0"/>
+    </joint>
+
+    <joint name="${prefix}kwr75_base_joint" type="fixed">
+      <parent link="${parent}" />
+      <child link="${prefix}kwr75_base_link" />
       <xacro:insert_block name="origin" />
     </joint>
 

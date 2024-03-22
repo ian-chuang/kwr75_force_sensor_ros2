@@ -5,13 +5,15 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+# find_package(serial REQUIRED)
+
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
-find_package(serialport REQUIRED)
+find_package(serial REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -21,7 +23,6 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   pluginlib
   rclcpp
   rclcpp_lifecycle
-  serialport
 )
 
 # add_library(
@@ -73,11 +74,6 @@ target_include_directories(
   kwr75_force_sensor
   PRIVATE
   include
-  ${serialport_INCLUDE_DIRS}
-)
-target_link_libraries(
-  kwr75_force_sensor 
-  ${serialport_LIBRARIES}
 )
 ament_target_dependencies(
   kwr75_force_sensor

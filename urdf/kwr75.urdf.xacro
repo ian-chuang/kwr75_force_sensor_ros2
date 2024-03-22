@@ -16,7 +16,7 @@
         prefix=""
         parent="world">
         <origin xyz="0 0 0.1" rpy="0 0 0" />
-    </xacro:dh_ag95_gripper>
+    </xacro:kwr75_force_sensor>
 
     <xacro:kwr75_force_sensor_ros2_control
         name="kwr75_force_sensor"
