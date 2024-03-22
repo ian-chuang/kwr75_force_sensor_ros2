@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<robot name="kwr75_force_sensor" xmlns:xacro="http://ros.org/wiki/xacro">
+
+    <!-- parameters -->
+    <xacro:arg name="prefix" default=""/>
+    <xacro:arg name="com_port" default="/dev/ttyUSB0"/>
+    <xacro:arg name="use_mock_hardware" default="false"/>
+    <xacro:arg name="mock_sensor_commands" default="false"/>
+
+    <!-- import main macro -->
+    <xacro:include filename="$(find kwr75_force_sensor_ros2)/urdf/kwr75_macro.xacro" />
+    <xacro:include filename="$(find kwr75_force_sensor_ros2)/urdf/kwr75.ros2_control.xacro" />
+
+    <!-- gripper -->
+    <xacro:kwr75_force_sensor
+        prefix=""
+        parent="world">
+        <origin xyz="0 0 0.1" rpy="0 0 0" />
+    </xacro:dh_ag95_gripper>
+
+    <xacro:kwr75_force_sensor_ros2_control
+        name="kwr75_force_sensor"
+        prefix="$(arg prefix)"
+        com_port="$(arg com_port)"
+        use_mock_hardware="$(arg use_mock_hardware)"
+        mock_sensor_commands="$(arg mock_sensor_commands)"
+    />
+
+    <link name="world" />
+
+</robot>

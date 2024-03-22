@@ -1,0 +1,7 @@
+<library path="kwr75_force_sensor">
+    <class name="kwr75_force_sensor/KWR75ForceSensorHardwareInterface" type="kwr75_force_sensor::KWR75ForceSensorHardwareInterface" base_class_type="hardware_interface::SensorInterface">
+        <description>
+            ROS2 controller for the KWR75 Force Sensor.
+        </description>
+    </class>
+</library>

@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<robot name="kwr75_macro" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <xacro:macro name="kwr75_force_sensor"
+    params="
+    prefix 
+    parent
+    tcp_offset
+    *origin"
+  >
+    <link name="${prefix}fts_link"/>
+
+    <joint name="${prefix}fts_joint" type="fixed">
+      <parent link="${parent}" />
+      <child link="${prefix}fts_link" />
+      <xacro:insert_block name="origin" />
+    </joint>
+
+  </xacro:macro>
+
+</robot>
