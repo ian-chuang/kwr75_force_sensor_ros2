@@ -1,5 +1,15 @@
 # KWR75 Force Torque Sensor ROS Driver
 
+
+
+sudo nano /etc/udev/rules.d/99-kwr75-force-sensor.rules
+KERNEL=="ttyUSB[0-9]*", ACTION=="add", ATTRS{idVendor}=="0403", ATTRS{idProduct}=="6001", MODE="0666", GROUP="dialout", SYMLINK+="robot/kwr75_force_sensor" ATTR{latency_timer}="1"
+
+If you want to add additional devices and don’t know their vendor or product IDs, you can use the command
+sudo udevadm info --name=<your_device_name> --attribute-walk
+
+
+
 This repository contains a simple ROS driver for reading data from the KWR75 Force Torque Sensor. The driver is implemented in Python and utilizes the `pyserial` library to establish communication with the KWR75 Force Torque Sensor.
 
 ## Installation

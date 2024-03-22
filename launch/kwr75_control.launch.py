@@ -16,7 +16,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "com_port",
-            default_value="/dev/ttyUSB0",
+            default_value="/dev/robot/kwr75_force_sensor",
             description="COM port of the gripper.",
         )
     )
@@ -66,9 +66,9 @@ def generate_launch_description():
             " ",
             PathJoinSubstitution(
                 [
-                    FindPackageShare("dh_ag95_description"),
+                    FindPackageShare("kwr75_force_sensor_ros2"),
                     "urdf",
-                    "dh_ag95.urdf.xacro",
+                    "kwr75.urdf.xacro",
                 ]
             ),
             " ",
@@ -89,13 +89,13 @@ def generate_launch_description():
 
     robot_controllers = PathJoinSubstitution(
         [
-            FindPackageShare("dh_gripper_driver"),
+            FindPackageShare("kwr75_force_sensor_ros2"),
             "config",
-            "dh_ag95_controllers.yaml",
+            "kwr75_controllers.yaml",
         ]
     )
     rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("dh_gripper_driver"), "rviz", "dh_ag95_control.rviz"]
+        [FindPackageShare("kwr75_force_sensor_ros2"), "rviz", "kwr75_control.rviz"]
     )
 
     control_node = Node(
@@ -132,8 +132,7 @@ def generate_launch_description():
 
     # Active controllers
     active_list = [
-        "joint_state_broadcaster",
-        "forward_position_controller",
+        "fts_broadcaster",
     ]
     active_spawners = [controller_spawner(controller) for controller in active_list]
 

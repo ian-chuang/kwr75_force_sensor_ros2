@@ -13,7 +13,7 @@ find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
-find_package(serial REQUIRED)
+find_package(serial_driver REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -23,65 +23,65 @@ set(THIS_PACKAGE_INCLUDE_DEPENDS
   pluginlib
   rclcpp
   rclcpp_lifecycle
+  serial_driver
 )
 
-# add_library(
-#   kwr75_force_sensor
-#   SHARED
-#   src/hardware_interface.cpp
-#   src/kwr75_driver.cpp
-# )
-# target_include_directories(
-#   kwr75_force_sensor
-#   PRIVATE
-#   include
-# )
-# ament_target_dependencies(
-#   kwr75_force_sensor
-#   ${${PROJECT_NAME}_EXPORTED_TARGETS}
-#   ${THIS_PACKAGE_INCLUDE_DEPENDS}
-# )
-# pluginlib_export_plugin_description_file(hardware_interface hardware_interface_plugin.xml)
-
-# # INSTALL
-# install(
-#   TARGETS kwr75_force_sensor
-#   DESTINATION lib
-# )
-# install(
-#   DIRECTORY include/
-#   DESTINATION include
-# )
-
-# # EXPORTS
-# ament_export_include_directories(
-#   include
-# )
-# ament_export_libraries(
-#   kwr75_force_sensor
-# )
-
-# ament_export_dependencies(
-#   hardware_interface
-#   pluginlib
-#   rclcpp
-#   rclcpp_lifecycle
-#   ${THIS_PACKAGE_INCLUDE_DEPENDS}
-# )
-
-add_executable(kwr75_force_sensor src/kwr75_driver.cpp)
+add_library(
+  kwr75_force_sensor_plugin
+  SHARED
+  src/hardware_interface.cpp
+)
 target_include_directories(
-  kwr75_force_sensor
+  kwr75_force_sensor_plugin
   PRIVATE
   include
 )
 ament_target_dependencies(
-  kwr75_force_sensor
+  kwr75_force_sensor_plugin
+  ${${PROJECT_NAME}_EXPORTED_TARGETS}
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
+)
+pluginlib_export_plugin_description_file(hardware_interface hardware_interface_plugin.xml)
+
+# INSTALL
+install(
+  TARGETS kwr75_force_sensor_plugin
+  DESTINATION lib
+)
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
+
+# EXPORTS
+ament_export_include_directories(
+  include
+)
+ament_export_libraries(
+  kwr75_force_sensor_plugin
+)
+
+ament_export_dependencies(
+  hardware_interface
+  pluginlib
+  rclcpp
+  rclcpp_lifecycle
+  ${THIS_PACKAGE_INCLUDE_DEPENDS}
+)
+
+add_executable(test_kwr75_force_sensor src/kwr75_driver.cpp)
+target_include_directories(
+  test_kwr75_force_sensor
+  PRIVATE
+  include
+)
+ament_target_dependencies(
+  test_kwr75_force_sensor
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
 install(TARGETS
-  kwr75_force_sensor
+  test_kwr75_force_sensor
   DESTINATION lib/${PROJECT_NAME})
  
 install(DIRECTORY config launch urdf rviz meshes

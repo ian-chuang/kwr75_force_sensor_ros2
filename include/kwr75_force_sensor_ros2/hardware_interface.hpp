@@ -16,8 +16,8 @@
 // Authors: Subhas Das, Denis Stogl
 //
 
-#ifndef ROS2_CONTROL_DEMO_EXAMPLE_5__EXTERNAL_RRBOT_FORCE_TORQUE_SENSOR_HPP_
-#define ROS2_CONTROL_DEMO_EXAMPLE_5__EXTERNAL_RRBOT_FORCE_TORQUE_SENSOR_HPP_
+#ifndef KWR75_FORCE_SENSOR_ROS2__HARDWARE_INTERFACE_HPP_
+#define KWR75_FORCE_SENSOR_ROS2__HARDWARE_INTERFACE_HPP_
 
 #include <memory>
 #include <string>
@@ -28,44 +28,51 @@
 #include "hardware_interface/sensor_interface.hpp"
 #include "hardware_interface/types/hardware_interface_return_values.hpp"
 #include "rclcpp/macros.hpp"
-#include "ros2_control_demo_example_5/visibility_control.h"
+#include "serial_driver/serial_driver.hpp"
 
-namespace ros2_control_demo_example_5
+namespace kwr75_force_sensor
 {
-class ExternalRRBotForceTorqueSensorHardware : public hardware_interface::SensorInterface
+
+static const int DATA_SIZE = 28;
+
+class KWR75ForceSensorHardwareInterface : public hardware_interface::SensorInterface
 {
 public:
-  RCLCPP_SHARED_PTR_DEFINITIONS(ExternalRRBotForceTorqueSensorHardware);
+  RCLCPP_SHARED_PTR_DEFINITIONS(KWR75ForceSensorHardwareInterface)
 
-  ROS2_CONTROL_DEMO_EXAMPLE_5_PUBLIC
   hardware_interface::CallbackReturn on_init(
     const hardware_interface::HardwareInfo & info) override;
 
-  ROS2_CONTROL_DEMO_EXAMPLE_5_PUBLIC
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
 
-  ROS2_CONTROL_DEMO_EXAMPLE_5_PUBLIC
   hardware_interface::CallbackReturn on_activate(
     const rclcpp_lifecycle::State & previous_state) override;
 
-  ROS2_CONTROL_DEMO_EXAMPLE_5_PUBLIC
   hardware_interface::CallbackReturn on_deactivate(
     const rclcpp_lifecycle::State & previous_state) override;
 
-  ROS2_CONTROL_DEMO_EXAMPLE_5_PUBLIC
   hardware_interface::return_type read(
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
 
 private:
-  // Parameters for the RRBot simulation
-  double hw_start_sec_;
-  double hw_stop_sec_;
-  double hw_sensor_change_;
+
+  /// \breif Callback for when serial data are received
+  void receive_callback(const std::vector<uint8_t> & buffer, const size_t & bytes_transferred);
+
+  std::shared_ptr<IoContext> ctx;
+  std::shared_ptr<drivers::serial_driver::SerialPortConfig> config;
+  std::shared_ptr<drivers::serial_driver::SerialDriver> driver;
+  std::string com_port;
 
   // Store the sensor states for the simulated robot
-  std::vector<double> hw_sensor_states_;
+  std::vector<double> hw_sensor_states;
+  std::vector<uint8_t> data;
+  const std::vector<uint8_t> COMMAND = { 0x48, 0xAA, 0x0D, 0x0A };
+  std::vector<uint8_t> received_data_buffer;
+  std::chrono::steady_clock::time_point last_good_call_time_;
+
 };
 
-}  // namespace ros2_control_demo_example_5
+}  // namespace kwr75_force_sensor
 
-#endif  // ROS2_CONTROL_DEMO_EXAMPLE_5__EXTERNAL_RRBOT_FORCE_TORQUE_SENSOR_HPP_
+#endif  // KWR75_FORCE_SENSOR_ROS2__HARDWARE_INTERFACE_HPP_
