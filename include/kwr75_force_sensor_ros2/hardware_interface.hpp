@@ -22,6 +22,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <mutex>
 
 #include "hardware_interface/handle.hpp"
 #include "hardware_interface/hardware_info.hpp"
@@ -40,16 +41,22 @@ class KWR75ForceSensorHardwareInterface : public hardware_interface::SensorInter
 public:
   RCLCPP_SHARED_PTR_DEFINITIONS(KWR75ForceSensorHardwareInterface)
 
+  virtual ~KWR75ForceSensorHardwareInterface();
+
   hardware_interface::CallbackReturn on_init(
     const hardware_interface::HardwareInfo & info) override;
 
   std::vector<hardware_interface::StateInterface> export_state_interfaces() override;
+
+  hardware_interface::CallbackReturn on_configure(const rclcpp_lifecycle::State& previous_state) final;
 
   hardware_interface::CallbackReturn on_activate(
     const rclcpp_lifecycle::State & previous_state) override;
 
   hardware_interface::CallbackReturn on_deactivate(
     const rclcpp_lifecycle::State & previous_state) override;
+
+  hardware_interface::CallbackReturn on_cleanup(const rclcpp_lifecycle::State& previous_state) final;
 
   hardware_interface::return_type read(
     const rclcpp::Time & time, const rclcpp::Duration & period) override;
@@ -66,10 +73,15 @@ private:
 
   // Store the sensor states for the simulated robot
   std::vector<double> hw_sensor_states;
+
+  // sensor variables
   std::vector<uint8_t> data;
-  const std::vector<uint8_t> COMMAND = { 0x48, 0xAA, 0x0D, 0x0A };
+  const std::vector<uint8_t> START_COMMAND = { 0x48, 0xAA, 0x0D, 0x0A };
+  const std::vector<uint8_t> STOP_COMMAND = { 0x43, 0xAA, 0x0D, 0x0A };
   std::vector<uint8_t> received_data_buffer;
-  std::chrono::steady_clock::time_point last_good_call_time_;
+  std::chrono::steady_clock::time_point last_receive_time;
+  std::mutex data_mutex;
+  std::mutex time_mutex;
 
 };
 
