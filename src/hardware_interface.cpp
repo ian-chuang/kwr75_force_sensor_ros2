@@ -220,7 +220,6 @@ void KWR75ForceSensorHardwareInterface::receive_callback(
         data_lock.unlock();
       } 
     }
-
     // clear anything before the end marker
     received_data_buffer.erase(received_data_buffer.begin(), end_pos + 2);
 

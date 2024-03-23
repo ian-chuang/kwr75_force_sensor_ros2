@@ -13,7 +13,7 @@
         <inertia ixx="0.000433" iyy="0.000433" izz="0.00067" ixy="-3e-06" iyz="1e-06" ixz="1e-06"/>
       </inertial>
       <visual>
-        <origin xyz="0 0 0" rpy="${-pi/2} 0 0"/>
+        <origin xyz="0 0 0.013" rpy="${-pi/2} 0 0"/>
         <geometry>
           <mesh filename="package://kwr75_force_sensor_ros2/meshes/kwr75.dae" scale="0.001 0.001 0.001"/>
         </geometry>
