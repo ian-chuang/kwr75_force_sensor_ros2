@@ -98,15 +98,16 @@ hardware_interface::CallbackReturn KWR75ForceSensorHardwareInterface::on_activat
   std::unique_lock<std::mutex> time_lock(time_mutex);
   auto current_receive_time = last_receive_time;
   time_lock.unlock();
+  std::chrono::steady_clock::time_point new_receive_time = current_receive_time;
   auto start_time = std::chrono::steady_clock::now();
 
-  do {
+  while (current_receive_time == new_receive_time){
     // Send the command to start data conversion
     driver->port()->send(START_COMMAND);
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     std::unique_lock<std::mutex> time_lock(time_mutex);
-    auto new_receive_time = last_receive_time;
+    new_receive_time = last_receive_time;
     time_lock.unlock();
 
     if (std::chrono::duration_cast<std::chrono::seconds>(
@@ -117,7 +118,7 @@ hardware_interface::CallbackReturn KWR75ForceSensorHardwareInterface::on_activat
         "No data received from the sensor for more than 1 second!");
       return hardware_interface::CallbackReturn::ERROR;
     }
-  } while (current_receive_time == new_receive_time);
+  } 
 
   RCLCPP_INFO(
     rclcpp::get_logger("KWR75ForceSensorHardwareInterface"), "Successfully activated!");
