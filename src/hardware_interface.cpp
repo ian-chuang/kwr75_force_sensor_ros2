@@ -160,7 +160,24 @@ hardware_interface::return_type KWR75ForceSensorHardwareInterface::read(
   float mz = *reinterpret_cast<float*>(&data[22]);
   data_lock.unlock();
 
-  double alpha = 0.08;
+  if (std::isnan(fx) || std::isnan(fy) || std::isnan(fz) || std::isnan(mx) || std::isnan(my) || std::isnan(mz))
+  {
+    RCLCPP_ERROR(
+      rclcpp::get_logger("KWR75ForceSensorHardwareInterface"),
+      "Received NaN values from the sensor!");
+    return hardware_interface::return_type::ERROR;
+  }
+
+  if (std::abs(fx) > MAX_FORCE || std::abs(fy) > MAX_FORCE || std::abs(fz) > MAX_FORCE ||
+      std::abs(mx) > MAX_TORQUE || std::abs(my) > MAX_TORQUE || std::abs(mz) > MAX_TORQUE)
+  {
+    RCLCPP_ERROR(
+      rclcpp::get_logger("KWR75ForceSensorHardwareInterface"),
+      "Received values from the sensor are out of range!");
+    return hardware_interface::return_type::ERROR;
+  }
+
+  double alpha = 0.75;
 
   hw_sensor_states[0] = hw_sensor_states[0]*(1-alpha) + fx*alpha;
   hw_sensor_states[1] = hw_sensor_states[1]*(1-alpha) + fy*alpha;

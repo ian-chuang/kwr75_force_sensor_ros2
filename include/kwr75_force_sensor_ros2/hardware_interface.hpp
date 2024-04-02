@@ -35,6 +35,8 @@ namespace kwr75_force_sensor
 {
 
 static const int DATA_SIZE = 28;
+static const double MAX_FORCE = 200.0;
+static const double MAX_TORQUE = 8.0;
 
 class KWR75ForceSensorHardwareInterface : public hardware_interface::SensorInterface
 {
