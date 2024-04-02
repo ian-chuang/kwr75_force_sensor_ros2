@@ -160,12 +160,14 @@ hardware_interface::return_type KWR75ForceSensorHardwareInterface::read(
   float mz = *reinterpret_cast<float*>(&data[22]);
   data_lock.unlock();
 
-  hw_sensor_states[0] = fx;
-  hw_sensor_states[1] = fy;
-  hw_sensor_states[2] = fz;
-  hw_sensor_states[3] = mx;
-  hw_sensor_states[4] = my;
-  hw_sensor_states[5] = mz;
+  double alpha = 0.08;
+
+  hw_sensor_states[0] = hw_sensor_states[0]*(1-alpha) + fx*alpha;
+  hw_sensor_states[1] = hw_sensor_states[1]*(1-alpha) + fy*alpha;
+  hw_sensor_states[2] = hw_sensor_states[2]*(1-alpha) + fz*alpha;
+  hw_sensor_states[3] = hw_sensor_states[3]*(1-alpha) + mx*alpha;
+  hw_sensor_states[4] = hw_sensor_states[4]*(1-alpha) + my*alpha;
+  hw_sensor_states[5] = hw_sensor_states[5]*(1-alpha) + mz*alpha;
   
   std::unique_lock<std::mutex> time_lock(time_mutex);
   std::chrono::steady_clock::time_point last_receive = last_receive_time;
