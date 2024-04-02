@@ -44,20 +44,12 @@ def generate_launch_description():
             Used only if 'use_mock_hardware' parameter is true.",
         )
     )
-    declared_arguments.append(
-        DeclareLaunchArgument(
-            "gui",
-            default_value="true",
-            description="Start RViz2 automatically with this launch file.",
-        )
-    )
 
     # Initialize Arguments
     com_port = LaunchConfiguration("com_port")
     prefix = LaunchConfiguration("prefix")
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
     mock_sensor_commands = LaunchConfiguration("mock_sensor_commands")
-    gui = LaunchConfiguration("gui")
 
     # Get URDF via xacro
     robot_description_content = Command(
@@ -94,8 +86,12 @@ def generate_launch_description():
             "kwr75_controllers.yaml",
         ]
     )
-    rviz_config_file = PathJoinSubstitution(
-        [FindPackageShare("kwr75_force_sensor_ros2"), "rviz", "kwr75_control.rviz"]
+    rqt_perspective_file = PathJoinSubstitution(
+        [
+            FindPackageShare("kwr75_force_sensor_ros2"),
+            "rqt",
+            "plot.perspective",
+        ]
     )
 
     control_node = Node(
@@ -113,13 +109,12 @@ def generate_launch_description():
         output="both",
         parameters=[robot_description],
     )
-    rviz_node = Node(
-        package="rviz2",
-        executable="rviz2",
-        name="rviz2",
-        output="log",
-        arguments=["-d", rviz_config_file],
-        condition=IfCondition(gui),
+    rqt_node = Node(
+        package="rqt_gui", 
+        executable="rqt_gui", 
+        arguments=[
+            "--perspective-file", rqt_perspective_file
+        ]
     )
 
     def controller_spawner(name, *args):
@@ -143,7 +138,7 @@ def generate_launch_description():
     nodes = [
         control_node,
         robot_state_pub_node,
-        rviz_node,
+        rqt_node,
     ] + active_spawners + inactive_spawners
 
     return LaunchDescription(declared_arguments + nodes)

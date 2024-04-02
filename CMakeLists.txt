@@ -68,23 +68,8 @@ ament_export_dependencies(
   rclcpp_lifecycle
   ${THIS_PACKAGE_INCLUDE_DEPENDS}
 )
-
-add_executable(test_kwr75_force_sensor src/kwr75_driver.cpp)
-target_include_directories(
-  test_kwr75_force_sensor
-  PRIVATE
-  include
-)
-ament_target_dependencies(
-  test_kwr75_force_sensor
-  ${${PROJECT_NAME}_EXPORTED_TARGETS}
-  ${THIS_PACKAGE_INCLUDE_DEPENDS}
-)
-install(TARGETS
-  test_kwr75_force_sensor
-  DESTINATION lib/${PROJECT_NAME})
  
-install(DIRECTORY config launch urdf rviz meshes
+install(DIRECTORY config launch urdf rviz meshes rqt
   DESTINATION share/${PROJECT_NAME}
 )
 
