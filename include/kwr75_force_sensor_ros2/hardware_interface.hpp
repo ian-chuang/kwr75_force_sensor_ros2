@@ -34,6 +34,7 @@
 namespace kwr75_force_sensor
 {
 
+// Constants
 static const int DATA_SIZE = 28;
 static const double MAX_FORCE = 200.0;
 static const double MAX_TORQUE = 8.0;
@@ -44,6 +45,8 @@ public:
   RCLCPP_SHARED_PTR_DEFINITIONS(KWR75ForceSensorHardwareInterface)
 
   virtual ~KWR75ForceSensorHardwareInterface();
+
+  // lifecycle / hardware interface methods
 
   hardware_interface::CallbackReturn on_init(
     const hardware_interface::HardwareInfo & info) override;
@@ -65,9 +68,10 @@ public:
 
 private:
 
-  /// \breif Callback for when serial data are received
+  // callback for when serial data are received
   void receive_callback(const std::vector<uint8_t> & buffer, const size_t & bytes_transferred);
 
+  // serial driver variables
   std::shared_ptr<IoContext> ctx;
   std::shared_ptr<drivers::serial_driver::SerialPortConfig> config;
   std::shared_ptr<drivers::serial_driver::SerialDriver> driver;
@@ -76,12 +80,16 @@ private:
   // Store the sensor states for the simulated robot
   std::vector<double> hw_sensor_states;
 
-  // sensor variables
+  // sensor data
   std::vector<uint8_t> data;
+  // constants for sending serial start and stop commands to sensor (according to datasheet)
   const std::vector<uint8_t> START_COMMAND = { 0x48, 0xAA, 0x0D, 0x0A };
   const std::vector<uint8_t> STOP_COMMAND = { 0x43, 0xAA, 0x0D, 0x0A };
+  // buffer for received data
   std::vector<uint8_t> received_data_buffer;
+  // flag to indicate last time data was received
   std::chrono::steady_clock::time_point last_receive_time;
+  // mutex for data and time
   std::mutex data_mutex;
   std::mutex time_mutex;
 

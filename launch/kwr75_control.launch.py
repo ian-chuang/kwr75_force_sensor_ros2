@@ -78,7 +78,8 @@ def generate_launch_description():
         ]
     )
     robot_description = {"robot_description": robot_description_content}
-
+    
+    # controller config file
     robot_controllers = PathJoinSubstitution(
         [
             FindPackageShare("kwr75_force_sensor_ros2"),
@@ -86,6 +87,7 @@ def generate_launch_description():
             "kwr75_controllers.yaml",
         ]
     )
+    # rqt perspective file
     rqt_perspective_file = PathJoinSubstitution(
         [
             FindPackageShare("kwr75_force_sensor_ros2"),
@@ -94,6 +96,7 @@ def generate_launch_description():
         ]
     )
 
+    # controller manager node
     control_node = Node(
         package="controller_manager",
         executable="ros2_control_node",
@@ -103,12 +106,14 @@ def generate_launch_description():
             ('controller_manager/robot_description', 'robot_description'),
         ],
     )
+    # robot state publisher node
     robot_state_pub_node = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
         output="both",
         parameters=[robot_description],
     )
+    # rqt node
     rqt_node = Node(
         package="rqt_gui", 
         executable="rqt_gui", 
@@ -117,6 +122,7 @@ def generate_launch_description():
         ]
     )
 
+    # Controller spawner helper function
     def controller_spawner(name, *args):
         return Node(
             package="controller_manager",

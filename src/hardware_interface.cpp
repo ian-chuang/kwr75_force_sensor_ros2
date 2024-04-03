@@ -23,6 +23,7 @@ KWR75ForceSensorHardwareInterface::~KWR75ForceSensorHardwareInterface()
 hardware_interface::CallbackReturn KWR75ForceSensorHardwareInterface::on_init(
   const hardware_interface::HardwareInfo & info)
 {
+  // Check if the sensor interface is correctly initialized
   if (
     hardware_interface::SensorInterface::on_init(info) !=
     hardware_interface::CallbackReturn::SUCCESS)
@@ -45,6 +46,7 @@ KWR75ForceSensorHardwareInterface::export_state_interfaces()
   // export sensor state interface
   for (uint i = 0; i < info_.sensors[0].state_interfaces.size(); i++)
   {
+    // use hw_sensor_states as storage for the sensor states
     state_interfaces.emplace_back(hardware_interface::StateInterface(
       info_.sensors[0].name, info_.sensors[0].state_interfaces[i].name, &hw_sensor_states[i]));
   }
@@ -56,11 +58,14 @@ hardware_interface::CallbackReturn
 KWR75ForceSensorHardwareInterface::on_configure(const rclcpp_lifecycle::State& previous_state)
 {
   // setup serial driver
+  // get the com port and baud rate from the hardware info
   com_port = info_.hardware_parameters["com_port"];
   uint32_t baud_rate = stod(info_.hardware_parameters["baud_rate"]);
+  // fc pt and sb are set accordingly to datasheet
   drivers::serial_driver::FlowControl fc = drivers::serial_driver::FlowControl::NONE;
   drivers::serial_driver::Parity pt = drivers::serial_driver::Parity::NONE;
   drivers::serial_driver::StopBits sb = drivers::serial_driver::StopBits::ONE;
+  // create the serial driver
   ctx = std::make_shared<IoContext>(2);
   config = std::make_shared<drivers::serial_driver::SerialPortConfig>(baud_rate, fc, pt, sb);
   driver = std::make_shared<drivers::serial_driver::SerialDriver>(*ctx);
@@ -73,7 +78,9 @@ KWR75ForceSensorHardwareInterface::on_configure(const rclcpp_lifecycle::State& p
     // open port and start async receive
     driver->init_port(com_port.c_str(), *config);
     if (!driver->port()->is_open()) {
+      // open port
       driver->port()->open();
+      // start async callback thread for receiving serial bytes data
       driver->port()->async_receive(
         std::bind(
           &KWR75ForceSensorHardwareInterface::receive_callback, this, std::placeholders::_1,
@@ -95,21 +102,28 @@ KWR75ForceSensorHardwareInterface::on_configure(const rclcpp_lifecycle::State& p
 hardware_interface::CallbackReturn KWR75ForceSensorHardwareInterface::on_activate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
+  // receive last time data was received
   std::unique_lock<std::mutex> time_lock(time_mutex);
   auto current_receive_time = last_receive_time;
   time_lock.unlock();
   std::chrono::steady_clock::time_point new_receive_time = current_receive_time;
+
+  // start time for timeout
   auto start_time = std::chrono::steady_clock::now();
 
+  // wait for new data to be received (until the time data was received changes)
   while (current_receive_time == new_receive_time){
     // Send the command to start data conversion
     driver->port()->send(START_COMMAND);
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
+    // receive last time data was received
     std::unique_lock<std::mutex> time_lock(time_mutex);
     new_receive_time = last_receive_time;
     time_lock.unlock();
 
+    // check if no data is received for more than 1 second
+    // then timeout and return error
     if (std::chrono::duration_cast<std::chrono::seconds>(
           std::chrono::steady_clock::now() - start_time).count() > 1)
     {
@@ -129,6 +143,7 @@ hardware_interface::CallbackReturn KWR75ForceSensorHardwareInterface::on_activat
 hardware_interface::CallbackReturn KWR75ForceSensorHardwareInterface::on_deactivate(
   const rclcpp_lifecycle::State & /*previous_state*/)
 {
+  // Send the command to stop data conversion
   driver->port()->send(STOP_COMMAND);
 
   RCLCPP_INFO(
@@ -140,7 +155,9 @@ hardware_interface::CallbackReturn KWR75ForceSensorHardwareInterface::on_deactiv
 hardware_interface::CallbackReturn
 KWR75ForceSensorHardwareInterface::on_cleanup(const rclcpp_lifecycle::State& previous_state)
 {
+  // Send the command to stop data conversion
   driver->port()->send(STOP_COMMAND);
+  // close the serial port
   driver->port()->close();
 
   RCLCPP_INFO(rclcpp::get_logger("KWR75ForceSensorHardwareInterface"), "System successfully stopped!");
@@ -151,8 +168,9 @@ KWR75ForceSensorHardwareInterface::on_cleanup(const rclcpp_lifecycle::State& pre
 hardware_interface::return_type KWR75ForceSensorHardwareInterface::read(
   const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
+  // receive data from sensor
   std::unique_lock<std::mutex> data_lock(data_mutex);
-  float fx = *reinterpret_cast<float*>(&data[2]);
+  float fx = *reinterpret_cast<float*>(&data[2]); // cast the data to float
   float fy = *reinterpret_cast<float*>(&data[6]);
   float fz = *reinterpret_cast<float*>(&data[10]);
   float mx = *reinterpret_cast<float*>(&data[14]);
@@ -160,6 +178,7 @@ hardware_interface::return_type KWR75ForceSensorHardwareInterface::read(
   float mz = *reinterpret_cast<float*>(&data[22]);
   data_lock.unlock();
 
+  // check if data is NaN or out of range
   if (std::isnan(fx) || std::isnan(fy) || std::isnan(fz) || std::isnan(mx) || std::isnan(my) || std::isnan(mz))
   {
     RCLCPP_ERROR(
@@ -168,6 +187,7 @@ hardware_interface::return_type KWR75ForceSensorHardwareInterface::read(
     return hardware_interface::return_type::ERROR;
   }
 
+  // check if data is out of range
   if (std::abs(fx) > MAX_FORCE || std::abs(fy) > MAX_FORCE || std::abs(fz) > MAX_FORCE ||
       std::abs(mx) > MAX_TORQUE || std::abs(my) > MAX_TORQUE || std::abs(mz) > MAX_TORQUE)
   {
@@ -177,8 +197,10 @@ hardware_interface::return_type KWR75ForceSensorHardwareInterface::read(
     return hardware_interface::return_type::ERROR;
   }
 
+  // temporary: low-pass filter
   double alpha = 0.75;
 
+  // update the sensor states and apply low-pass filter
   hw_sensor_states[0] = hw_sensor_states[0]*(1-alpha) + fx*alpha;
   hw_sensor_states[1] = hw_sensor_states[1]*(1-alpha) + fy*alpha;
   hw_sensor_states[2] = hw_sensor_states[2]*(1-alpha) + fz*alpha;
@@ -186,10 +208,12 @@ hardware_interface::return_type KWR75ForceSensorHardwareInterface::read(
   hw_sensor_states[4] = hw_sensor_states[4]*(1-alpha) + my*alpha;
   hw_sensor_states[5] = hw_sensor_states[5]*(1-alpha) + mz*alpha;
   
+  // get the last time data was received
   std::unique_lock<std::mutex> time_lock(time_mutex);
   std::chrono::steady_clock::time_point last_receive = last_receive_time;
   time_lock.unlock();
 
+  // if no data is received for more than 1 second, return error
   if (std::chrono::duration_cast<std::chrono::seconds>(
         std::chrono::steady_clock::now() - last_receive).count() > 1)
   {
@@ -206,6 +230,7 @@ void KWR75ForceSensorHardwareInterface::receive_callback(
   const std::vector<uint8_t> & buffer,
   const size_t & bytes_transferred)
 {
+  // set the last time data was received
   std::unique_lock<std::mutex> time_lock(time_mutex);
   last_receive_time = std::chrono::steady_clock::now();
   time_lock.unlock();
