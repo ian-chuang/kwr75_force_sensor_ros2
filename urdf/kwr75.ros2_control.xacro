@@ -25,12 +25,12 @@
           <state_interface name="torque.y"/>
           <state_interface name="torque.z"/>
           <param name="frame_id">${prefix}fts_link</param>
-          <param name="fx_range">100</param>
-          <param name="fy_range">100</param>
-          <param name="fz_range">100</param>
-          <param name="tx_range">15</param>
-          <param name="ty_range">15</param>
-          <param name="tz_range">15</param>
+          <param name="fx_range">200.0</param>
+          <param name="fy_range">200.0</param>
+          <param name="fz_range">200.0</param>
+          <param name="tx_range">8.0</param>
+          <param name="ty_range">8.0</param>
+          <param name="tz_range">8.0</param>
         </sensor>
       </ros2_control>
     </xacro:unless>

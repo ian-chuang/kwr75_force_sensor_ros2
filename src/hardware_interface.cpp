@@ -170,12 +170,14 @@ hardware_interface::return_type KWR75ForceSensorHardwareInterface::read(
 {
   // receive data from sensor
   std::unique_lock<std::mutex> data_lock(data_mutex);
-  float fx = *reinterpret_cast<float*>(&data[2]); // cast the data to float
-  float fy = *reinterpret_cast<float*>(&data[6]);
-  float fz = *reinterpret_cast<float*>(&data[10]);
-  float mx = *reinterpret_cast<float*>(&data[14]);
-  float my = *reinterpret_cast<float*>(&data[18]);
-  float mz = *reinterpret_cast<float*>(&data[22]);
+  // cast the data to float and convert from Kg to N
+  float fx = *reinterpret_cast<float*>(&data[2]) * GRAVITY;
+  float fy = *reinterpret_cast<float*>(&data[6]) * GRAVITY;
+  float fz = *reinterpret_cast<float*>(&data[10]) * GRAVITY;
+  // cast the data to float and convert from Kgm to Nm
+  float mx = *reinterpret_cast<float*>(&data[14]) * GRAVITY;
+  float my = *reinterpret_cast<float*>(&data[18]) * GRAVITY;
+  float mz = *reinterpret_cast<float*>(&data[22]) * GRAVITY;
   data_lock.unlock();
 
   // check if data is NaN or out of range
@@ -197,16 +199,13 @@ hardware_interface::return_type KWR75ForceSensorHardwareInterface::read(
     return hardware_interface::return_type::ERROR;
   }
 
-  // temporary: low-pass filter
-  double alpha = 0.75;
-
-  // update the sensor states and apply low-pass filter
-  hw_sensor_states[0] = hw_sensor_states[0]*(1-alpha) + fx*alpha;
-  hw_sensor_states[1] = hw_sensor_states[1]*(1-alpha) + fy*alpha;
-  hw_sensor_states[2] = hw_sensor_states[2]*(1-alpha) + fz*alpha;
-  hw_sensor_states[3] = hw_sensor_states[3]*(1-alpha) + mx*alpha;
-  hw_sensor_states[4] = hw_sensor_states[4]*(1-alpha) + my*alpha;
-  hw_sensor_states[5] = hw_sensor_states[5]*(1-alpha) + mz*alpha;
+  // update the sensor states
+  hw_sensor_states[0] = fx;
+  hw_sensor_states[1] = fy;
+  hw_sensor_states[2] = fz;
+  hw_sensor_states[3] = mx;
+  hw_sensor_states[4] = my;
+  hw_sensor_states[5] = mz;
   
   // get the last time data was received
   std::unique_lock<std::mutex> time_lock(time_mutex);
